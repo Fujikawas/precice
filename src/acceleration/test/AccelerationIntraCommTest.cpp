@@ -61,6 +61,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
   std::map<int, double> upperBounds;
   upperBounds.insert(std::make_pair(dataIDs[0], 1.0e16));
   upperBounds.insert(std::make_pair(dataIDs[1], 1.0e16));
+  std::string         boundingType = "fall-back";
   std::vector<double> factors;
   factors.resize(2, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
@@ -70,7 +71,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timeWindowsReused, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec);
+                        timeWindowsReused, boundingType, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec);
 
   Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
@@ -308,6 +309,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
   upperBounds.insert(std::make_pair(dataIDs[0], 1.0e16));
   upperBounds.insert(std::make_pair(dataIDs[1], 1.0e16));
   std::vector<double> factors;
+  std::string         boundingType = "fall-back";
   factors.resize(2, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
   std::vector<int>  vertexOffsets{4, 8, 8, 10};
@@ -316,7 +318,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec, alwaysBuildJacobian,
+                         timeWindowsReused, boundingType, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec, alwaysBuildJacobian,
                          restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
 
   Eigen::VectorXd dcol1;
@@ -604,12 +606,13 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   upperBounds.insert(std::make_pair(dataIDs[1], 1.0e16));
   PtrPreconditioner _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(-1));
   std::vector<int>  vertexOffsets{0, 11, 22, 22};
+  std::string       boundingType = "fall-back";
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("dummyMesh", 2, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, _preconditioner, alwaysBuildJacobian,
+                         timeWindowsReused, boundingType, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, _preconditioner, alwaysBuildJacobian,
                          restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 2));
@@ -1081,6 +1084,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   lowerBounds.insert(std::make_pair(dataIDs[0], -1.0e16));
   std::map<int, double> upperBounds;
   upperBounds.insert(std::make_pair(dataIDs[0], 1.0e16));
+  std::string         boundingType = "fall-back";
   std::vector<double> factors;
   factors.resize(1.0, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
@@ -1090,7 +1094,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec);
+                         timeWindowsReused, boundingType, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
 

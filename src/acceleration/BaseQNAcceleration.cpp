@@ -36,6 +36,7 @@ BaseQNAcceleration::BaseQNAcceleration(
     bool                       forceInitialRelaxation,
     int                        maxIterationsUsed,
     int                        timeWindowsReused,
+    std::string                boundingType,
     int                        filter,
     double                     singularityLimit,
     std::vector<int>           dataIDs,
@@ -48,6 +49,7 @@ BaseQNAcceleration::BaseQNAcceleration(
       _maxIterationsUsed(maxIterationsUsed),
       _timeWindowsReused(timeWindowsReused),
       _dataIDs(std::move(dataIDs)),
+      _boundingType(boundingType),
       _rangeTypes(rangeTypes),
       _lowerBounds(lowerBounds),
       _upperBounds(upperBounds),
@@ -178,7 +180,7 @@ void BaseQNAcceleration::initialize(
 }
 void BaseQNAcceleration::forwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds, std::map<int, double> upperBounds)
 {
-  if (methodForQN == "transformation") {
+  if (_boundingType == "transformation") {
     Eigen::Index offset = 0;
     for (auto id : dataIDs) {
       Eigen::Index size       = cplData.at(id)->values().size();
@@ -248,19 +250,11 @@ void BaseQNAcceleration::forwardTransformation(DataMap &cplData, const std::vect
 
       offset += size;
     }
-  } else if (methodForQN == "cropping") {
-    // do nothing
-  } else if (methodForQN == "Aitken") {
-    // do nothing
-  } else if (methodForQN == "cutStep") {
-    // do nothing
-  } else {
-    PRECICE_ERROR("The method for quasi-Newton acceleration is not correctly defined");
   }
 }
 void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds, std::map<int, double> upperBounds, Eigen::VectorXd &xUpdate)
 {
-  if (methodForQN == "transformation") {
+  if (_boundingType == "transformation") {
     Eigen::Index offset = 0;
     for (auto id : dataIDs) {
       Eigen::Index size       = cplData.at(id)->values().size();
@@ -313,7 +307,7 @@ void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vec
 
       offset += size;
     }
-  } else if (methodForQN == "cropping") {
+  } else if (_boundingType == "cropping") {
     Eigen::Index offset = 0;
     for (auto id : dataIDs) {
       Eigen::Index size       = cplData.at(id)->values().size();
@@ -338,7 +332,8 @@ void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vec
       }
       offset += size;
     }
-  } else if (methodForQN == "Aitken") {
+  } else if (_boundingType == "fall-back") {
+    _fallBack = false;
     Eigen::Index offset = 0;
     for (auto id : dataIDs) {
       Eigen::Index size       = cplData.at(id)->values().size();
@@ -374,7 +369,7 @@ void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vec
       offset += size;
       std::cout << "fallback " << _fallBack << std::endl;
     }
-  } else if (methodForQN == "cutStep") {
+  } else if (_boundingType == "cutStep") {
     Eigen::Index offset    = 0;
     double       scaleStep = 1.0;
     for (auto id : dataIDs) {
@@ -403,7 +398,7 @@ void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vec
           if (_values[i + offset] < lowerBound) {
             scaleStep = fmin(scaleStep, (lowerBound - _values[i + offset] + xUpdate[i + offset]) / xUpdate[i + offset]);
           } else if (_values[i + offset] > upperBound) {
-            std::cout << std::fixed << std::setprecision(16);
+            // std::cout << std::fixed << std::setprecision(16);
             std::cout << "_values[i + offset]: " << _values[i + offset] << std::endl;
             scaleStep = fmin(scaleStep, (upperBound - _values[i + offset] + xUpdate[i + offset]) / xUpdate[i + offset]);
           }
@@ -449,9 +444,6 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 
   // if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
-
-    _aitkenFactor = _initialRelaxation;
-
     // do nothing: constant relaxation
   } else {
     PRECICE_DEBUG("   Update Difference Matrices");
@@ -518,20 +510,6 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         }
         _nbDropCols++;
       }
-    }
-
-    if (methodForQN == "Aitken") {
-      // Compute current residual = values - oldValues
-      Eigen::VectorXd residuals = _values - _oldValues;
-      // Compute residual deltas (= residuals - oldResiduals) and store it in _oldResiduals
-      Eigen::VectorXd residualDeltas = residuals - _oldResiduals;
-      // compute fraction of aitken factor with residuals and residual deltas
-      double nominator   = utils::IntraComm::dot(_oldResiduals, residualDeltas);
-      double denominator = utils::IntraComm::dot(residualDeltas, residualDeltas);
-      std::cout << "nominator: " << nominator << std::endl;
-      std::cout << "denominator: " << denominator << std::endl;
-      _aitkenFactor = -_aitkenFactor * (nominator / denominator);
-      std::cout << "Aitken factor: " << _aitkenFactor << std::endl;
     }
 
     _oldResiduals = _residuals; // Store residuals
@@ -651,10 +629,9 @@ void BaseQNAcceleration::performAcceleration(
     backwardTransformation(cplData, _dataIDs, _rangeTypes, _lowerBounds, _upperBounds, xUpdate);
 
     if (_fallBack) {
-      _values -= xUpdate;                                                   // revert the QN update
-      _values = _oldValues * (1 - _aitkenFactor) + _aitkenFactor * _values; // dounder-relaxation instead
+      _values -= xUpdate; // revert the QN update
     }
-    std::cout << "values after backward handling: " << _values << std::endl;
+    //std::cout << "values after backward handling: " << _values << std::endl;
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
     if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {

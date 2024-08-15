@@ -205,26 +205,34 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
 void runTestQNBoundedValue(std::string const &config, TestContext const &context)
 {
-  std::string meshName, writeDataName, readDataName;
+  std::string meshName, writeDataName1, writeDataName2, writeDataName3, readDataName1, readDataName2, readDataName3;
 
   if (context.isNamed("SolverOne")) {
     meshName      = "MeshOne";
-    writeDataName = "Data1";
-    readDataName  = "Data2";
+    writeDataName1 = "Data11";
+    writeDataName2 = "Data12";
+    writeDataName3 = "Data13";
+    readDataName1  = "Data21";
+    readDataName2  = "Data22";
+    readDataName3  = "Data23";
     std::cout << "SolverOne" << std::endl;
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     meshName      = "MeshTwo";
-    writeDataName = "Data2";
-    readDataName  = "Data1";
+    writeDataName1 = "Data21";
+    writeDataName2 = "Data22";
+    writeDataName3 = "Data23";
+    readDataName1 = "Data11";
+    readDataName2 = "Data12";
+    readDataName3 = "Data13";
   }
 
   precice::Participant interface(context.name, config, context.rank, context.size);
 
-  VertexID vertexIDs[2];
+  VertexID vertexIDs[6];
 
   // meshes for rank 0 and rank 1, we use matching meshes for both participants
-  double positions0[4] = {1.0, 0.0, 1.0, 1.2};
+  double positions0[12] = {1.0, 0.0, 1.0, 1.2, 1.0, 1.4, 1.0, 1.6, 1.0, 1.8, 1.0, 2.0};
 
   if (context.isNamed("SolverOne")) {
     if (context.isPrimary()) {
@@ -238,8 +246,12 @@ void runTestQNBoundedValue(std::string const &config, TestContext const &context
   }
 
   interface.initialize();
-  double inValues[2]  = {0.1, 0.2};
-  double outValues[2] = {0.00, 0.00};
+  double inValues1[6]  = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6};
+  double inValues2[6]  = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6};
+  double inValues3[6]  = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6};
+  double outValues1[6] = {0.00, 0.00, 0.00, 0.00, 0.00, 0.00};
+  double outValues2[6] = {0.00, 0.00, 0.00, 0.00, 0.00, 0.00};
+  double outValues3[6] = {0.00, 0.00, 0.00, 0.00, 0.00, 0.00};
 
   int iterations = 0;
 
@@ -248,37 +260,80 @@ void runTestQNBoundedValue(std::string const &config, TestContext const &context
     }
 
     double preciceDt = interface.getMaxTimeStepSize();
-    interface.readData(meshName, readDataName, vertexIDs, preciceDt, inValues);
+    interface.readData(meshName, readDataName1, vertexIDs, preciceDt, inValues1);
+    interface.readData(meshName, readDataName2, vertexIDs, preciceDt, inValues2);
+    interface.readData(meshName, readDataName3, vertexIDs, preciceDt, inValues3);
 
     if (context.isNamed("SolverOne")) {
       if (iterations == 0) {
-        inValues[0] = 0.9;
-        inValues[1] = -0.9;
+        inValues1[0] = -0.3;
+        inValues1[1] = 0.2;
+        inValues1[2] = -0.9;
+        inValues1[3] = 0.9;
+        inValues1[4] = 0.5;
+        inValues1[5] = -0.5;
+
+        inValues2[0] = 0.3;
+        inValues2[1] = 0.2;
+        inValues2[2] = 0.9;
+        inValues2[3] = 0.9;
+        inValues2[4] = 0.5;
+        inValues2[5] = 0.5;
+
+        inValues3[0] = -0.3;
+        inValues3[1] = 0.2;
+        inValues3[2] = -0.9;
+        inValues3[3] = 0.9;
+        inValues3[4] = 0.5;
+        inValues3[5] = -0.5;
       }
-      for (int i = 0; i < 2; i++) {
-        outValues[i] = inValues[i]; // only pushes solution through
+      for (int i = 0; i < 6; i++) {
+        outValues1[i] = inValues1[i]; // only pushes solution through
+        outValues2[i] = inValues2[i]; // only pushes solution through
+        outValues3[i] = inValues3[i]; // only pushes solution through
       }
     } else {
-      double x = inValues[0];
-      double y = inValues[1];
       // outValues[0] = (2 * (1.5 - x + x * y) * (y - 1.0) + 2 * (2.25 - x + x * y * y) * (y * y - 1) + 2 * (2.65 - x + x * pow(y, 3)) * (pow(y, 3) - 1)) / 5.0e4;
       // outValues[1] = (2 * (1.5 - x + x * y) * x + 4 * (2.25 - x + x * y * y) * x * y + 6 * (2.65 - x + x * pow(y, 3)) * x * y * y) / 5.0e4;
       // outValues[0] = abs(-sin(x) * cos(y) - 2.0 * cos(x) * sin(y));
       // outValues[1] = abs(-cos(x) * sin(y) - 2.0 * sin(x) * cos(y));
-      outValues[0] = 1.0 * sin(x * y / 2.0);
-      outValues[1] = 1.0 * cos(x * y / 2.0);
+      outValues1[0] = 1.0 * sin(inValues1[0] * inValues1[1] / 0.10);
+      outValues1[1] = 1.0 * cos(inValues1[0] * inValues1[1] / 0.250);
+      outValues1[2] = 1.0 * sin(inValues1[2] * inValues1[3] / 0.250);
+      outValues1[3] = 1.0 * cos(inValues1[2] * inValues1[3] / 0.250);
+      outValues1[4] = 1.0 * sin(inValues1[4] * inValues1[5] / 0.250);
+      outValues1[5] = 1.0 * cos(inValues1[4] * inValues1[5] / 0.250);
+
+      outValues2[0] = 5.0 + 5.0 * sin((inValues2[0]-5.0) * (inValues2[1]-5.0) / 0.10);
+      outValues2[1] = 5.0 + 5.0 * cos((inValues2[0]-5.0) * (inValues2[1]-5.0) / 0.250);
+      outValues2[2] = 5.0 + 5.0 * sin((inValues2[2]-5.0) * (inValues2[3]-5.0) / 0.250);
+      outValues2[3] = 5.0 + 5.0 * cos((inValues2[2]-5.0) * (inValues2[3]-5.0) / 0.250);
+      outValues2[4] = 5.0 + 5.0 * sin((inValues2[4]-5.0) * (inValues2[5]-5.0) / 0.250);
+      outValues2[5] = 5.0 + 5.0 * cos((inValues2[4]-5.0) * (inValues2[5]-5.0) / 0.250);
+
+      // a fixed-problem without bounded data
+      outValues3[0] = 1.0 / 3 * sin(inValues3[1]) + 1.0 / 4 * cos(inValues3[2]) + 1.0 / 5 * pow(inValues3[3], 2) + 1.0 / 6;
+      outValues3[1] = 1.0 / 4 * cos(inValues3[0]) + 1.0 / 5 * sin(inValues3[4]) + 1.0 / 6 * sqrt(inValues3[5] + 2);
+      outValues3[2] = 1.0 / 5 * sin(inValues3[1]) + 1.0 / 6 * cos(inValues3[3]) + 1.0 / 7 * log(inValues3[0] * inValues3[0] + 1);
+      outValues3[3] = 1.0 / 6 * cos(inValues3[3]) + 1.0 / 7 * sin(inValues3[5]) + 1.0 / 8 * sqrt(std::abs(inValues3[4] - 1));
+      outValues3[4] = 1.0 / 7 * sin(inValues3[4]) + 1.0 / 8 * cos(inValues3[1]) + 1.0 / 9 * exp(inValues3[2] - 1);
+      outValues3[5] = 1.0 / 8 * cos(inValues3[5]) + 1.0 / 9 * sin(inValues3[0]) + 1.0 / 10 * log(inValues3[3] * inValues3[3] + 2);
       // for (int i = 1; i < 2; i = i + 2) {
       //   outValues[i] = 1;
       // }
       // for (int i = 0; i < 2; i = i + 2) {
       //   outValues[i] = 10 * (inValues[i + 1] - inValues[i] * inValues[i]) + inValues[i];
       // }
-      std::cout << "outvalues in Solver2: " << outValues[0] << "," << outValues[1] << std::endl;
+      std::cout << "outvalues1 in Solver2: " << outValues1[0] << "," << outValues1[1]<<"," << outValues1[2]<<","<<outValues1[3]<<","<<outValues1[4]<<","<<outValues1[5] << std::endl;
+      std::cout << "outvalues2 in Solver2: " << outValues2[0] << "," << outValues2[1]<<"," << outValues2[2]<<","<<outValues2[3]<<","<<outValues2[4]<<","<<outValues2[5] << std::endl;
+      std::cout << "outvalues3 in Solver2: " << outValues3[0] << "," << outValues3[1]<<"," << outValues3[2]<<","<<outValues3[3]<<","<<outValues3[4]<<","<<outValues3[5] << std::endl;
       // outValues[0] = fmin(fmax(-4.5, outValues[0]), 4.5);
       // outValues[1] = fmin(fmax(-4.5, outValues[1]), 4.5);
     }
 
-    interface.writeData(meshName, writeDataName, vertexIDs, outValues);
+    interface.writeData(meshName, writeDataName1, vertexIDs, outValues1);
+    interface.writeData(meshName, writeDataName2, vertexIDs, outValues2);
+    interface.writeData(meshName, writeDataName3, vertexIDs, outValues3);
 
     interface.advance(1.0);
 

@@ -35,6 +35,7 @@ AccelerationConfiguration::AccelerationConfiguration(
       TAG_INIT_RELAX("initial-relaxation"),
       TAG_MAX_USED_ITERATIONS("max-used-iterations"),
       TAG_TIME_WINDOWS_REUSED("time-windows-reused"),
+      TAG_BOUNDING_TYPE("bounding"),
       TAG_DATA("data"),
       TAG_FILTER("filter"),
       TAG_ESTIMATEJACOBIAN("estimate-jacobian"),
@@ -59,6 +60,10 @@ AccelerationConfiguration::AccelerationConfiguration(
       VALUE_AITKEN("aitken"),
       VALUE_IQNILS("IQN-ILS"),
       VALUE_IQNIMVJ("IQN-IMVJ"),
+      VALUE_CROPPING("cropping"),
+      VALUE_TRANSFORMATION("transformation"),
+      VALUE_FALLBACK("fall-back"),
+      VALUE_CUTSTEP("cutStep"),
       VALUE_QR1FILTER("QR1"),
       VALUE_QR1_ABSFILTER("QR1-absolute"),
       VALUE_QR2FILTER("QR2"),
@@ -207,6 +212,9 @@ void AccelerationConfiguration::xmlTagCallback(
   } else if (callingTag.getName() == TAG_TIME_WINDOWS_REUSED) {
     _userDefinitions.definedTimeWindowsReused = true;
     _config.timeWindowsReused                 = callingTag.getIntAttributeValue(ATTR_VALUE);
+  } else if (callingTag.getName() == TAG_BOUNDING_TYPE) {
+    _userDefinitions.definedBoundingType = true;
+    _config.boundingType                 = callingTag.getStringAttributeValue(ATTR_TYPE);
   } else if (callingTag.getName() == TAG_FILTER) {
     _userDefinitions.definedFilter = true;
     const auto &f                  = callingTag.getStringAttributeValue(ATTR_TYPE);
@@ -293,6 +301,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
       _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ? _config.relaxationFactor : _defaultValuesIQNILS.relaxationFactor;
       _config.maxIterationsUsed = (_userDefinitions.definedMaxIterationsUsed) ? _config.maxIterationsUsed : _defaultValuesIQNILS.maxIterationsUsed;
       _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ? _config.timeWindowsReused : _defaultValuesIQNILS.timeWindowsReused;
+      _config.boundingType      = (_userDefinitions.definedBoundingType) ? _config.boundingType : _defaultValuesIQNILS.boundingType;
       _config.filter            = (_userDefinitions.definedFilter) ? _config.filter : _defaultValuesIQNILS.filter;
       _config.singularityLimit  = (_userDefinitions.definedFilter) ? _config.singularityLimit : _defaultValuesIQNILS.singularityLimit;
       _acceleration             = PtrAcceleration(
@@ -301,6 +310,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.forceInitialRelaxation,
               _config.maxIterationsUsed,
               _config.timeWindowsReused,
+              _config.boundingType,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
               _config.rangeTypes,
@@ -312,6 +322,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
       _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ? _config.relaxationFactor : _defaultValuesIQNIMVJ.relaxationFactor;
       _config.maxIterationsUsed = (_userDefinitions.definedMaxIterationsUsed) ? _config.maxIterationsUsed : _defaultValuesIQNIMVJ.maxIterationsUsed;
       _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ? _config.timeWindowsReused : _defaultValuesIQNIMVJ.timeWindowsReused;
+      _config.boundingType      = (_userDefinitions.definedBoundingType) ? _config.boundingType : _defaultValuesIQNILS.boundingType;
       _config.filter            = (_userDefinitions.definedFilter) ? _config.filter : _defaultValuesIQNILS.filter;
       _config.singularityLimit  = (_userDefinitions.definedFilter) ? _config.singularityLimit : _defaultValuesIQNILS.singularityLimit;
       _acceleration             = PtrAcceleration(
@@ -320,6 +331,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.forceInitialRelaxation,
               _config.maxIterationsUsed,
               _config.timeWindowsReused,
+              _config.boundingType,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
               _config.rangeTypes,
@@ -487,6 +499,21 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
 
     addCommonIQNSubtags(tag);
 
+    XMLTag tagBoundingType(*this, TAG_BOUNDING_TYPE, XMLTag::OCCUR_NOT_OR_ONCE);
+    tagBoundingType.setDocumentation(" Method used to bound the data. Possible types:\n"
+                                     " - `transformation`: the value could range in \\(-\\infty, \\infty)\\ \n"
+                                     " - `cropping`: the value is bounded at the left end\n"
+                                     " - `Aitken`: the value is bounded at the right send\n"
+                                     " - `cutStep`: the value has a range that is bounded at both the left and right ends.\n"
+                                     "If this tag is not provided, cropping is used.");
+    XMLAttribute<std::string> attrBoundingType(ATTR_TYPE);
+    attrBoundingType.setOptions({VALUE_CROPPING,
+                                 VALUE_TRANSFORMATION,
+                                 VALUE_FALLBACK,
+                                 VALUE_CUTSTEP});
+    tagBoundingType.addAttribute(attrBoundingType);
+    tag.addSubtag(tagBoundingType);
+
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
     tagPreconditioner.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner"
                                        " can be applied. "
@@ -559,6 +586,21 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tag.addSubtag(tagTimeWindowsReused);
 
     addCommonIQNSubtags(tag);
+
+    XMLTag tagBoundingType(*this, TAG_BOUNDING_TYPE, XMLTag::OCCUR_NOT_OR_ONCE);
+    tagBoundingType.setDocumentation(" Method used to bound the data. Possible types:\n"
+                                     " - `transformation`: the value could range in \\(-\\infty, \\infty)\\ \n"
+                                     " - `cropping`: the value is bounded at the left end\n"
+                                     " - `Aitken`: the value is bounded at the right send\n"
+                                     " - `cutStep`: the value has a range that is bounded at both the left and right ends.\n"
+                                     "If this tag is not provided, cropping is used.");
+    XMLAttribute<std::string> attrBoundingType(ATTR_TYPE);
+    attrBoundingType.setOptions({VALUE_CROPPING,
+                                 VALUE_TRANSFORMATION,
+                                 VALUE_FALLBACK,
+                                 VALUE_CUTSTEP});
+    tagBoundingType.addAttribute(attrBoundingType);
+    tag.addSubtag(tagBoundingType);
 
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
     tagPreconditioner.setDocumentation(

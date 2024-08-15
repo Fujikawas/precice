@@ -67,6 +67,7 @@ public:
       bool                       forceInitialRelaxation,
       int                        maxIterationsUsed,
       int                        timeWindowsReused,
+      std::string                boundingType,
       int                        filter,
       double                     singularityLimit,
       std::vector<int>           dataIDs,
@@ -152,12 +153,12 @@ public:
    */
   virtual int getLSSystemCols() const;
 
-  // options are "cropping", "transformation", "Aitken" and "cutStep"
-  std::string methodForQN = "Aitken";
+  // options are "cropping", "transformation", "fall-back" and "cutStep"
+  std::string _boundingType;
 
-  // if this step would fall back to Aitken under-relaxation
-  bool   _fallBack     = false;
-  double _aitkenFactor = 0.5;
+  // if this step would fall back torelaxation under-relaxation
+  bool   _fallBack         = false;
+  double _relaxationFactor = 0.5;
 
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};

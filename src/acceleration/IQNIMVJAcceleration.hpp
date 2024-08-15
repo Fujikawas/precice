@@ -46,6 +46,7 @@ public:
       bool                           forceInitialRelaxation,
       int                            maxIterationsUsed,
       int                            pastTimeWindowsReused,
+      std::string                    boundingType,
       int                            filter,
       double                         singularityLimit,
       std::vector<int>               dataIDs,

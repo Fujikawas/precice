@@ -33,6 +33,7 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
     bool                           forceInitialRelaxation,
     int                            maxIterationsUsed,
     int                            pastTimeWindowsReused,
+    std::string                    boundingType,
     int                            filter,
     double                         singularityLimit,
     std::vector<int>               dataIDs,
@@ -45,7 +46,7 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
     int                            chunkSize,
     int                            RSLSreusedTimeWindows,
     double                         RSSVDtruncationEps)
-    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
+    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused, boundingType,
                          filter, singularityLimit, std::move(dataIDs), rangeTypes, lowerBounds, upperBounds, preconditioner),
       //  _secondaryOldXTildes(),
       _invJacobian(),

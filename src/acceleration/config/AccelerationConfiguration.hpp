@@ -47,6 +47,7 @@ private:
   const std::string TAG_INIT_RELAX;
   const std::string TAG_MAX_USED_ITERATIONS;
   const std::string TAG_TIME_WINDOWS_REUSED;
+  const std::string TAG_BOUNDING_TYPE;
   const std::string TAG_DATA;
   const std::string TAG_FILTER;
   const std::string TAG_ESTIMATEJACOBIAN;
@@ -73,6 +74,10 @@ private:
   const std::string VALUE_AITKEN;
   const std::string VALUE_IQNILS;
   const std::string VALUE_IQNIMVJ;
+  const std::string VALUE_CROPPING;
+  const std::string VALUE_TRANSFORMATION;
+  const std::string VALUE_FALLBACK;
+  const std::string VALUE_CUTSTEP;
   const std::string VALUE_QR1FILTER;
   const std::string VALUE_QR1_ABSFILTER;
   const std::string VALUE_QR2FILTER;
@@ -110,6 +115,7 @@ private:
     std::map<int, double>      lowerBounds;
     std::map<int, double>      upperBounds;
     std::string                type;
+    std::string                boundingType;
     double                     relaxationFactor           = 0;
     bool                       forceInitialRelaxation     = false;
     int                        maxIterationsUsed          = 0;
@@ -136,6 +142,7 @@ private:
     double      singularityLimit           = 1e-2;
     std::string preconditionerType         = "residual-sum";
     int         precond_nbNonConstTWindows = -1;
+    std::string boundingType               = "cropping";
   } _defaultValuesIQNILS;
 
   const struct DefaultValuesIMVJ {
@@ -146,12 +153,14 @@ private:
     double      singularityLimit           = 1e-2;
     std::string preconditionerType         = "residual-sum";
     int         precond_nbNonConstTWindows = -1;
+    std::string boundingType               = "cropping";
   } _defaultValuesIQNIMVJ;
 
   struct UserDefinitions {
     bool definedRelaxationFactor   = false;
     bool definedMaxIterationsUsed  = false;
     bool definedTimeWindowsReused  = false;
+    bool definedBoundingType       = false;
     bool definedFilter             = false;
     bool definedPreconditionerType = false;
   } _userDefinitions;
