@@ -300,6 +300,7 @@ void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vec
 
         for (Eigen::Index i = 0; i < size; i++) {
           _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
+          std::cout << "values before cutOff after backward transformation: " << _values[i + offset] << std::endl;
           _values[i + offset] = fmin(fmax(lowerBound, _values[i + offset]), upperBound);
           // TODO: when the cropped part is large, warn preCICE against fake convergence( accelerate to the boundary for consecutive time windows, thus residual is zero when it's actually not converged)
         }
@@ -624,8 +625,15 @@ void BaseQNAcceleration::performAcceleration(
     /**
      * apply quasiNewton update
      */
+    std::cout << "values before update: " << _values << std::endl;
     _values += xUpdate;
     std::cout << "values before backward handling: " << _values << std::endl;
+    bool overshoot =false;
+    for (int i=32; i<48; i++)
+    {
+       if (_values[i]<0 ||  _values[i]> 1.) overshoot =true;
+    }
+    std::cout << "overshoot=" << overshoot << std::endl;
     backwardTransformation(cplData, _dataIDs, _rangeTypes, _lowerBounds, _upperBounds, xUpdate);
 
     if (_fallBack) {

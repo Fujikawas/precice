@@ -203,7 +203,100 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   }
 }
 
-void runTestQNBoundedValue(std::string const &config, TestContext const &context)
+void runTestQNBoundedValueSimple(std::string const &config, TestContext const &context)
+{
+  std::string meshName, writeDataName1, readDataName1;
+
+  if (context.isNamed("SolverOne")) {
+    meshName      = "MeshOne";
+    writeDataName1 = "Data11";
+    readDataName1  = "Data21";
+    std::cout << "SolverOne" << std::endl;
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    meshName      = "MeshTwo";
+    writeDataName1 = "Data21";
+    readDataName1 = "Data11";
+  }
+
+  precice::Participant interface(context.name, config, context.rank, context.size);
+
+  VertexID vertexIDs[2];
+
+  // meshes for rank 0 and rank 1, we use matching meshes for both participants
+  double positions0[4] = {1.0, 0.0, 1.0, 1.2};
+
+  if (context.isNamed("SolverOne")) {
+    if (context.isPrimary()) {
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
+    }
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    if (context.isPrimary()) {
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
+    }
+  }
+
+  interface.initialize();
+  double inValues1[2]  = {0.1, 0.2};
+  double outValues1[2] = {0.00, 0.00};
+
+  int iterations = 0;
+
+  while (interface.isCouplingOngoing()) {
+    if (interface.requiresWritingCheckpoint()) {
+    }
+
+    double preciceDt = interface.getMaxTimeStepSize();
+    interface.readData(meshName, readDataName1, vertexIDs, preciceDt, inValues1);
+
+    if (context.isNamed("SolverOne")) {
+      if (iterations == 0) {
+        inValues1[0] = -0.2;
+        inValues1[1] = 0.2;
+      }
+      for (int i = 0; i < 2; i++) {
+        outValues1[i] = inValues1[i]; // only pushes solution through
+      }
+    } else {
+      int problem = 4;
+      switch (problem)
+      {
+      case 1:
+        outValues1[0] = sin(inValues1[0] * inValues1[1] / 0.10); // I
+        outValues1[1] = cos(inValues1[0] * inValues1[1] / 0.250);
+        break;
+      case 2:
+        outValues1[0] = sin(inValues1[0] * inValues1[1] / 0.5+0.12); // II
+        outValues1[1] = sin(inValues1[0] * inValues1[1] * inValues1[1] / 0.25 + 0.4);
+        break;
+      case 3:
+        outValues1[0] = sin(0.6 * inValues1[0] * inValues1[1] - 0.4 *inValues1[1] * inValues1[1] + 2); // III
+        outValues1[1] = sin(inValues1[0] * inValues1[1] * inValues1[1] / 0.25 +0.4 * inValues1[0] * inValues1[1]  + 0.1);
+        break;
+      case 4:
+        outValues1[0] = sin(6. * inValues1[0] * inValues1[1]+ 0.12); // IV
+        outValues1[1] = sin(inValues1[0] * inValues1[1] * inValues1[1] / 0.25 +0.15);
+        break;
+      default:
+        break;
+      }
+      std::cout << "outvalues1 in Solver2: " << outValues1[0] << "," << outValues1[1] << std::endl;
+    }
+
+    interface.writeData(meshName, writeDataName1, vertexIDs, outValues1);
+
+    interface.advance(1.0);
+
+    if (interface.requiresReadingCheckpoint()) {
+    }
+    iterations++;
+  }
+
+  interface.finalize();
+}
+
+void runTestQNBoundedValueComplex(std::string const &config, TestContext const &context)
 {
   std::string meshName, writeDataName1, writeDataName2, writeDataName3, readDataName1, readDataName2, readDataName3;
 
@@ -292,25 +385,20 @@ void runTestQNBoundedValue(std::string const &config, TestContext const &context
         outValues2[i] = inValues2[i]; // only pushes solution through
         outValues3[i] = inValues3[i]; // only pushes solution through
       }
-    } else {
-      // outValues[0] = (2 * (1.5 - x + x * y) * (y - 1.0) + 2 * (2.25 - x + x * y * y) * (y * y - 1) + 2 * (2.65 - x + x * pow(y, 3)) * (pow(y, 3) - 1)) / 5.0e4;
-      // outValues[1] = (2 * (1.5 - x + x * y) * x + 4 * (2.25 - x + x * y * y) * x * y + 6 * (2.65 - x + x * pow(y, 3)) * x * y * y) / 5.0e4;
-      // outValues[0] = abs(-sin(x) * cos(y) - 2.0 * cos(x) * sin(y));
-      // outValues[1] = abs(-cos(x) * sin(y) - 2.0 * sin(x) * cos(y));
-      outValues1[0] = 1.0 * sin(inValues1[0] * inValues1[1] / 0.10);
-      outValues1[1] = 1.0 * cos(inValues1[0] * inValues1[1] / 0.250);
-      outValues1[2] = 1.0 * sin(inValues1[2] * inValues1[3] / 0.250);
-      outValues1[3] = 1.0 * cos(inValues1[2] * inValues1[3] / 0.250);
-      outValues1[4] = 1.0 * sin(inValues1[4] * inValues1[5] / 0.250);
-      outValues1[5] = 1.0 * cos(inValues1[4] * inValues1[5] / 0.250);
+     } else {
+      outValues1[0] = sin(inValues1[0] * inValues1[1] / 0.5+0.12); // II
+      outValues1[1] = sin(inValues1[0] * inValues1[1] * inValues1[1] / 0.25 + 0.4);
+      outValues1[2] = sin(0.6 * inValues1[2] * inValues1[3] - 0.4 *inValues1[3] * inValues1[3] + 2); // III
+      outValues1[3] = sin(inValues1[2] * inValues1[3] * inValues1[3] / 0.25 +0.4 * inValues1[2] * inValues1[3]  + 0.1);
+      outValues1[4] = sin(6. * inValues1[4] * inValues1[5]+ 0.12); // IV
+      outValues1[5] = sin(inValues1[4] * inValues1[5] * inValues1[5] / 0.25 +0.15);
 
-      outValues2[0] = 5.0 + 5.0 * sin((inValues2[0]-5.0) * (inValues2[1]-5.0) / 0.10);
-      outValues2[1] = 5.0 + 5.0 * cos((inValues2[0]-5.0) * (inValues2[1]-5.0) / 0.250);
-      outValues2[2] = 5.0 + 5.0 * sin((inValues2[2]-5.0) * (inValues2[3]-5.0) / 0.250);
-      outValues2[3] = 5.0 + 5.0 * cos((inValues2[2]-5.0) * (inValues2[3]-5.0) / 0.250);
-      outValues2[4] = 5.0 + 5.0 * sin((inValues2[4]-5.0) * (inValues2[5]-5.0) / 0.250);
-      outValues2[5] = 5.0 + 5.0 * cos((inValues2[4]-5.0) * (inValues2[5]-5.0) / 0.250);
-
+      outValues2[0] = sin(inValues2[0] * inValues2[1] / 0.5+0.12); // II
+      outValues2[1] = sin(inValues2[0] * inValues2[1] * inValues2[1] / 0.25 + 0.4);
+      outValues2[2] = sin(0.6 * inValues2[2] * inValues2[3] - 0.4 *inValues2[3] * inValues2[3] + 2); // III
+      outValues2[3] = sin(inValues2[2] * inValues2[3] * inValues2[3] / 0.25 +0.4 * inValues2[2] * inValues2[3]  + 0.1);
+      outValues2[4] = sin(0.6 * inValues2[4] * inValues2[5] - 0.4 *inValues2[5] * inValues2[5] + 2); // III
+      outValues2[5] = sin(inValues2[4] * inValues2[5] * inValues2[5] / 0.25 +0.4 * inValues2[4] * inValues2[5]  + 0.1);
       // a fixed-problem without bounded data
       outValues3[0] = 1.0 / 3 * sin(inValues3[1]) + 1.0 / 4 * cos(inValues3[2]) + 1.0 / 5 * pow(inValues3[3], 2) + 1.0 / 6;
       outValues3[1] = 1.0 / 4 * cos(inValues3[0]) + 1.0 / 5 * sin(inValues3[4]) + 1.0 / 6 * sqrt(inValues3[5] + 2);
@@ -318,17 +406,10 @@ void runTestQNBoundedValue(std::string const &config, TestContext const &context
       outValues3[3] = 1.0 / 6 * cos(inValues3[3]) + 1.0 / 7 * sin(inValues3[5]) + 1.0 / 8 * sqrt(std::abs(inValues3[4] - 1));
       outValues3[4] = 1.0 / 7 * sin(inValues3[4]) + 1.0 / 8 * cos(inValues3[1]) + 1.0 / 9 * exp(inValues3[2] - 1);
       outValues3[5] = 1.0 / 8 * cos(inValues3[5]) + 1.0 / 9 * sin(inValues3[0]) + 1.0 / 10 * log(inValues3[3] * inValues3[3] + 2);
-      // for (int i = 1; i < 2; i = i + 2) {
-      //   outValues[i] = 1;
-      // }
-      // for (int i = 0; i < 2; i = i + 2) {
-      //   outValues[i] = 10 * (inValues[i + 1] - inValues[i] * inValues[i]) + inValues[i];
-      // }
+
       std::cout << "outvalues1 in Solver2: " << outValues1[0] << "," << outValues1[1]<<"," << outValues1[2]<<","<<outValues1[3]<<","<<outValues1[4]<<","<<outValues1[5] << std::endl;
       std::cout << "outvalues2 in Solver2: " << outValues2[0] << "," << outValues2[1]<<"," << outValues2[2]<<","<<outValues2[3]<<","<<outValues2[4]<<","<<outValues2[5] << std::endl;
       std::cout << "outvalues3 in Solver2: " << outValues3[0] << "," << outValues3[1]<<"," << outValues3[2]<<","<<outValues3[3]<<","<<outValues3[4]<<","<<outValues3[5] << std::endl;
-      // outValues[0] = fmin(fmax(-4.5, outValues[0]), 4.5);
-      // outValues[1] = fmin(fmax(-4.5, outValues[1]), 4.5);
     }
 
     interface.writeData(meshName, writeDataName1, vertexIDs, outValues1);

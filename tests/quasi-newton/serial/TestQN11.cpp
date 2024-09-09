@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_CASE(TestQN11)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  runTestQNBoundedValue(context.config(), context);
+  runTestQNBoundedValueComplex(context.config(), context);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration

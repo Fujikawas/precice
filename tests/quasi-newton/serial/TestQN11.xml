@@ -68,7 +68,7 @@
     <exchange data="Data21" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
     <exchange data="Data22" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
     <exchange data="Data23" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
-    <max-iterations value="400" />
+    <max-iterations value="1000" />
     <relative-convergence-measure limit="1e-8" data="Data11" mesh="MeshOne" />
     <relative-convergence-measure limit="1e-8" data="Data12" mesh="MeshOne" />
     <absolute-convergence-measure limit="1e-8" data="Data13" mesh="MeshOne" />
@@ -78,18 +78,18 @@
         mesh="MeshOne"
         lower-bound="-1.0"
         upper-bound="1.0"
-        range-type="two-ends-bounded" />
+        range-type="not-bounded" />
       <data
         name="Data22"
         mesh="MeshOne"
-        lower-bound="0.0"
-        upper-bound="10.0"
-        range-type="two-ends-bounded" />
+        lower-bound="-5.0"
+        upper-bound="5.0"
+        range-type="not-bounded" />
       <data
         name="Data23"
         mesh="MeshOne"/>
       <filter type="QR2" limit="1e-3" />
-      <bounding type="cutStep" />
+      <bounding type="fall-back" />
       <initial-relaxation value="0.2" />
       <max-used-iterations value="2" />
       <preconditioner type="residual-sum" />
