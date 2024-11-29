@@ -625,15 +625,15 @@ void BaseQNAcceleration::performAcceleration(
     /**
      * apply quasiNewton update
      */
-    std::cout << "values before update: " << _values << std::endl;
+    //std::cout << "values before update: " << _values << std::endl;
     _values += xUpdate;
-    std::cout << "values before backward handling: " << _values << std::endl;
-    bool overshoot =false;
-    for (int i=32; i<48; i++)
-    {
-       if (_values[i]<0 ||  _values[i]> 1.) overshoot =true;
-    }
-    std::cout << "overshoot=" << overshoot << std::endl;
+    //std::cout << "values before backward handling: " << _values << std::endl;
+    // bool overshoot =false;
+    // for (int i=32; i<48; i++)
+    // {
+    //    if (_values[i]<0 ||  _values[i]> 1.) overshoot =true;
+    // }
+    // std::cout << "overshoot=" << overshoot << std::endl;
     backwardTransformation(cplData, _dataIDs, _rangeTypes, _lowerBounds, _upperBounds, xUpdate);
 
     if (_fallBack) {

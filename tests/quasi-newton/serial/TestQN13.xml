@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="Data11" />
+  <data:scalar name="Data21" />
+
+  <mesh name="MeshOne" dimensions="2">
+    <use-data name="Data11" />
+    <use-data name="Data21" />
+  </mesh>
+
+  <mesh name="MeshTwo" dimensions="2">
+    <use-data name="Data11" />
+    <use-data name="Data21" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="MeshOne" />
+    <write-data name="Data11" mesh="MeshOne" />
+    <read-data name="Data21" mesh="MeshOne" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <receive-mesh name="MeshOne" from="SolverOne" safety-factor="0.1" />
+    <provide-mesh name="MeshTwo" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="MeshOne"
+      to="MeshTwo"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="conservative" />
+    <write-data name="Data21" mesh="MeshTwo" />
+    <read-data name="Data11" mesh="MeshTwo" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="Data11" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+    <exchange data="Data21" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
+    <max-iterations value="400" />
+    <relative-convergence-measure limit="1e-8" data="Data11" mesh="MeshOne" />
+    <acceleration:IQN-ILS>
+      <data
+        name="Data21"
+        mesh="MeshOne"
+        lower-bound="-1"
+        upper-bound="1"
+        range-type="two-ends-bounded" />
+      <filter type="QR2" limit="1e-3" />
+      <bounding type="transformation" />
+      <initial-relaxation value="0.2" />
+      <max-used-iterations value="2" />
+      <time-windows-reused value="1" />
+    </acceleration:IQN-ILS>
+  </coupling-scheme:serial-implicit>
+</precice-configuration>
