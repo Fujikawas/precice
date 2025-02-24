@@ -328,6 +328,7 @@ void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vec
         }
       } else {
         for (Eigen::Index i = 0; i < size; i++) {
+          std::cout << "values before cutOff" << _values[i + offset] << std::endl;
           _values[i + offset] = fmin(fmax(lowerBound, _values[i + offset]), upperBound);
         }
       }

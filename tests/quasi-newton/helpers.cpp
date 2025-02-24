@@ -345,7 +345,8 @@ void runTestQNBoundedValueSimple(std::string const &config, TestContext const &c
         outValues1[i] = inValues1[i]; // only pushes solution through
       }
     } else {
-      int problem = 4;
+      int problem = 2;
+      std::cout << "invalues1 in Solver2: " << inValues1[0] << "," << inValues1[1] << std::endl;
       switch (problem)
       {
       case 1:
@@ -364,6 +365,11 @@ void runTestQNBoundedValueSimple(std::string const &config, TestContext const &c
         outValues1[0] = sin(6. * inValues1[0] * inValues1[1]+ 0.12); // IV
         outValues1[1] = sin(inValues1[0] * inValues1[1] * inValues1[1] / 0.25 +0.15);
         break;
+      case 5:
+        outValues1[0] = sin(0.6 * inValues1[0] * inValues1[1] - 0.4 *inValues1[1] * inValues1[1] + 2); // V
+        outValues1[1] = sin(2*inValues1[0] * inValues1[1] * inValues1[1] +0.4);
+        break;
+
       default:
         break;
       }
