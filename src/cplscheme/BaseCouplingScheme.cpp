@@ -729,7 +729,8 @@ bool BaseCouplingScheme::measureConvergence()
   bool oneStrict    = false; // at least one convergence measure is strict and did not converge
 
   const bool reachedMinIterations = _iterations >= _minIterations;
-  for (const auto &convMeasure : _convergenceMeasures) {
+  for (size_t i = 0; i < _convergenceMeasures.size() - 1; ++i) {
+    const auto &convMeasure = _convergenceMeasures[i];
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
     PRECICE_ASSERT(convMeasure.couplingData->previousIteration().size() == convMeasure.couplingData->values().size(), convMeasure.couplingData->previousIteration().size(), convMeasure.couplingData->values().size(), convMeasure.couplingData->getDataName());
@@ -754,6 +755,12 @@ bool BaseCouplingScheme::measureConvergence()
     }
 
     PRECICE_INFO(convMeasure.measure->printState(convMeasure.couplingData->getDataName()));
+  }
+
+  const auto &fineConstMeasure = _convergenceMeasures[_convergenceMeasures.size() - 1];
+  allConverged &= fineConstMeasure.couplingData->values()(0) <= 0.001;
+  if (not utils::IntraComm::isSecondary()) {
+    _convergenceWriter->writeData(fineConstMeasure.logHeader(), 0.0);
   }
 
   std::string messageSuffix;

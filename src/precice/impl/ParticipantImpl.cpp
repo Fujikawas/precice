@@ -521,7 +521,10 @@ void ParticipantImpl::trimOldDataBefore(double time)
 void ParticipantImpl::trimSendDataAfter(double time)
 {
   for (auto &context : _accessor->writeDataContexts()) {
-    context.trimAfter(time);
+    // context.trimAfter(time);
+    if (context.hasMapping()) {
+      context.trimAfter(time);
+    }
   }
 }
 

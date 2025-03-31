@@ -155,6 +155,7 @@ void ExportVTK::exportData(
       continue;
     }
     const Eigen::VectorXd &values = data->timeStepsStorage().last().sample.values;
+    PRECICE_WARN(">>> EXP {}:{} t={}", mesh.getName(), data->getName(), data->timeStepsStorage().getTimes());
     if (data->getDimensions() > 1) {
       Eigen::VectorXd viewTemp(data->getDimensions());
       outFile << "VECTORS " << data->getName() << " double\n";
