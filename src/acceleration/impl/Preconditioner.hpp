@@ -9,9 +9,7 @@
 #include "logging/Logger.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /**
  * @brief Interface for preconditioner variants that can be applied to quasi-Newton acceleration schemes.
@@ -30,7 +28,7 @@ public:
   }
 
   /// Destructor, empty.
-  virtual ~Preconditioner() {}
+  virtual ~Preconditioner() = default;
 
   /**
    * @brief initialize the preconditioner
@@ -84,7 +82,7 @@ public:
   void revert(Eigen::MatrixXd &M, bool transpose)
   {
     PRECICE_TRACE();
-    //PRECICE_ASSERT(_needsGlobalWeights);
+    // PRECICE_ASSERT(_needsGlobalWeights);
     if (transpose) {
       PRECICE_DEBUG_IF((int) _weights.size() != M.cols(), "The number of columns of the matrix {} and weights size {} mismatched.", M.cols(), _weights.size());
 
@@ -244,6 +242,4 @@ private:
   logging::Logger _log{"acceleration::Preconditioner"};
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

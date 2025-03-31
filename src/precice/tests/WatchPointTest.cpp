@@ -37,7 +37,7 @@ std::vector<double> readDoublesFromTXTFile(std::string const &filename, int skip
 }
 } // namespace
 
-void testWatchPoint(const TestContext & context,
+void testWatchPoint(const TestContext  &context,
                     bool                withEdge,
                     std::vector<double> watchPosition,
                     std::vector<double> expected)
@@ -120,6 +120,9 @@ void testWatchPoint(const TestContext & context,
 
     // Write output again
     watchpoint0.exportPointData(1.0);
+
+    doubleData->moveToNextWindow();
+    vectorData->moveToNextWindow();
 
     // Write output again to check if the data stays the same
     watchpoint0.exportPointData(2.0);

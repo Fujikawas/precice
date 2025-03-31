@@ -80,8 +80,8 @@ void ParticipantState::provideMesh(const mesh::PtrMesh &mesh)
   _usedMeshContexts.push_back(context);
 }
 
-void ParticipantState::receiveMesh(const mesh::PtrMesh &                         mesh,
-                                   const std::string &                           fromParticipant,
+void ParticipantState::receiveMesh(const mesh::PtrMesh                          &mesh,
+                                   const std::string                            &fromParticipant,
                                    double                                        safetyFactor,
                                    partition::ReceivedPartition::GeometricFilter geoFilter,
                                    const bool                                    allowDirectAccess)
@@ -150,7 +150,7 @@ ReadDataContext &ParticipantState::readDataContext(std::string_view mesh, std::s
 mesh::PtrMesh ParticipantState::findMesh(std::string_view data) const
 {
   for (const auto &meshContext : _meshContexts) {
-    const auto &             mesh = meshContext.second->mesh->getName();
+    const auto              &mesh = meshContext.second->mesh->getName();
     MeshDataKey<std::string> key{mesh, std::string{data}};
     const auto               it = _readDataContexts.find(key);
     if (it != _readDataContexts.end()) {
@@ -462,12 +462,37 @@ std::string ParticipantState::hintForMeshData(std::string_view mesh, std::string
   }
 
   // Was the data typoed?
-  auto matches = utils::computeMatches(mesh, localData);
+  auto matches = utils::computeMatches(data, localData);
   if (matches.front().distance < 3) {
     return " Did you mean data \"" + matches.front().name + "\"?";
   }
 
   return fmt::format(" Available data are: {}", fmt::join(localData, ", "));
+}
+
+void ParticipantState::initializeMappingDataCache(std::string_view mappingType)
+{
+  if (mappingType == "write") {
+    for (auto &context : writeDataContexts()) {
+      context.initializeMappingDataCache();
+    }
+  } else {
+    for (auto &context : readDataContexts()) {
+      context.initializeMappingDataCache();
+    }
+  }
+}
+
+void ParticipantState::configureInputMeshContext(std::string_view fromMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement)
+{
+  meshContext(fromMesh).meshRequirement = std::max(meshContext(fromMesh).meshRequirement, requirement);
+  meshContext(fromMesh).fromMappingContexts.push_back(mappingContext);
+}
+
+void ParticipantState::configureOutputMeshContext(std::string_view toMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement)
+{
+  meshContext(toMesh).toMappingContexts.push_back(mappingContext);
+  meshContext(toMesh).meshRequirement = std::max(meshContext(toMesh).meshRequirement, requirement);
 }
 
 } // namespace precice::impl

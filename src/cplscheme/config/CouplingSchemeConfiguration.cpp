@@ -43,7 +43,7 @@ const int CouplingSchemeConfiguration::DEFAULT_MIN_ITERATIONS(1);               
 const int CouplingSchemeConfiguration::DEFAULT_MAX_ITERATIONS(CouplingScheme::UNDEFINED_MAX_ITERATIONS); // max infinite iterations
 
 CouplingSchemeConfiguration::CouplingSchemeConfiguration(
-    xml::XMLTag &                        parent,
+    xml::XMLTag                         &parent,
     mesh::PtrMeshConfiguration           meshConfig,
     m2n::M2NConfiguration::SharedPointer m2nConfig,
     config::PtrParticipantConfiguration  participantConfig)
@@ -155,7 +155,7 @@ const PtrCouplingScheme &CouplingSchemeConfiguration::getCouplingScheme(
 
 void CouplingSchemeConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
@@ -317,7 +317,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
 
 void CouplingSchemeConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
@@ -386,7 +386,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
 
 void CouplingSchemeConfiguration::addCouplingScheme(
     const PtrCouplingScheme &cplScheme,
-    const std::string &      participantName)
+    const std::string       &participantName)
 {
   PRECICE_TRACE(participantName);
   if (!utils::contained(participantName, _couplingSchemes)) {
@@ -421,7 +421,7 @@ void CouplingSchemeConfiguration::addCouplingScheme(
 
 void CouplingSchemeConfiguration::addTypespecifcSubtags(
     const std::string &type,
-    xml::XMLTag &      tag)
+    xml::XMLTag       &tag)
 {
   PRECICE_TRACE(type);
   addTransientLimitTags(type, tag);
@@ -430,13 +430,13 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
 
   if (type == VALUE_SERIAL_EXPLICIT) {
     addTagParticipants(tag);
-    addTagExchange(tag);
+    addTagExchange(tag, false);
   } else if (type == VALUE_PARALLEL_EXPLICIT) {
     addTagParticipants(tag);
-    addTagExchange(tag);
+    addTagExchange(tag, false);
   } else if (type == VALUE_PARALLEL_IMPLICIT) {
     addTagParticipants(tag);
-    addTagExchange(tag);
+    addTagExchange(tag, true);
     addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagAbsoluteOrRelativeConvergenceMeasure(tag);
@@ -446,7 +446,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagMaxIterations(tag);
   } else if (type == VALUE_MULTI) {
     addTagParticipant(tag);
-    addTagExchange(tag);
+    addTagExchange(tag, true);
     addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagAbsoluteOrRelativeConvergenceMeasure(tag);
@@ -456,7 +456,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagMaxIterations(tag);
   } else if (type == VALUE_SERIAL_IMPLICIT) {
     addTagParticipants(tag);
-    addTagExchange(tag);
+    addTagExchange(tag, true);
     addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagAbsoluteOrRelativeConvergenceMeasure(tag);
@@ -472,7 +472,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
 
 void CouplingSchemeConfiguration::addTransientLimitTags(
     const std::string &type,
-    xml::XMLTag &      tag)
+    xml::XMLTag       &tag)
 {
   using namespace xml;
   XMLTag tagMaxTime(*this, TAG_MAX_TIME, XMLTag::OCCUR_NOT_OR_ONCE);
@@ -537,7 +537,7 @@ void CouplingSchemeConfiguration::addTagParticipant(
 }
 
 void CouplingSchemeConfiguration::addTagExchange(
-    xml::XMLTag &tag)
+    xml::XMLTag &tag, bool substepsDefault)
 {
   using namespace xml;
   XMLTag tagExchange(*this, TAG_EXCHANGE, XMLTag::OCCUR_ONCE_OR_MORE);
@@ -553,7 +553,7 @@ void CouplingSchemeConfiguration::addTagExchange(
   tagExchange.addAttribute(participantTo);
   auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initialize?");
   tagExchange.addAttribute(attrInitialize);
-  auto attrExchangeSubsteps = XMLAttribute<bool>(ATTR_EXCHANGE_SUBSTEPS, false).setDocumentation("Should this data exchange substeps?");
+  auto attrExchangeSubsteps = XMLAttribute<bool>(ATTR_EXCHANGE_SUBSTEPS, substepsDefault).setDocumentation("Should this data exchange substeps?");
   tagExchange.addAttribute(attrExchangeSubsteps);
   tag.addSubtag(tagExchange);
 }
@@ -813,10 +813,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
   for (const auto &exchange : _config.exchanges) {
     if ((exchange.from == _config.participants[1]) && exchange.exchangeSubsteps) {
       PRECICE_WARN(
-          "You enabled exchanging substeps in the serial-explicit coupling between the second participant \"{}\" and first participant \"{}\". "
-          "This is inefficient as these substeps will never be used.",
-          exchange.from, exchange.to);
-      break;
+          "Exchange of substeps is activated in the serial-explicit coupling between the second participant \"{}\" and first participant \"{}\". This is inefficient as these substeps will never be used. You can turn this off in your preCICE configuration setting substeps=\"False\" in <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" substeps=\"False\" />", exchange.from, exchange.to, exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
     }
   }
 
@@ -837,10 +834,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
   for (const auto &exchange : _config.exchanges) {
     if (exchange.exchangeSubsteps) {
       PRECICE_WARN(
-          "You enabled exchanging substeps in the parallel-explicit coupling between \"{}\" and \"{}\". "
-          "This is inefficient as these substeps will never be used.",
-          exchange.from, exchange.to);
-      break;
+          "Exchange of substeps is activated in the parallel-explicit coupling between \"{}\" and \"{}\". This is inefficient as these substeps will never be used. You can turn this off in your preCICE configuration setting substeps=\"False\" in <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" substeps=\"False\" />", exchange.from, exchange.to, exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
     }
   }
 
@@ -1020,7 +1014,7 @@ void CouplingSchemeConfiguration::checkSubstepExchangeWaveformDegree(const Confi
 }
 
 void CouplingSchemeConfiguration::addDataToBeExchanged(
-    BiCouplingScheme & scheme,
+    BiCouplingScheme  &scheme,
     const std::string &accessor) const
 {
   PRECICE_TRACE();
@@ -1069,7 +1063,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
 
 void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     MultiCouplingScheme &scheme,
-    const std::string &  accessor) const
+    const std::string   &accessor) const
 {
   PRECICE_TRACE();
   for (const Config::Exchange &exchange : _config.exchanges) {
@@ -1158,8 +1152,8 @@ void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
 }
 
 void CouplingSchemeConfiguration::addConvergenceMeasures(
-    BaseCouplingScheme *                            scheme,
-    const std::string &                             participant,
+    BaseCouplingScheme                             *scheme,
+    const std::string                              &participant,
     const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const
 {
   for (auto &elem : convergenceMeasureDefinitions) {
@@ -1171,8 +1165,8 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
 
 void CouplingSchemeConfiguration::setSerialAcceleration(
     BaseCouplingScheme *scheme,
-    const std::string & first,
-    const std::string & second) const
+    const std::string  &first,
+    const std::string  &second) const
 {
   if (_accelerationConfig->getAcceleration().get() != nullptr) {
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
@@ -1187,7 +1181,7 @@ void CouplingSchemeConfiguration::setSerialAcceleration(
 
 void CouplingSchemeConfiguration::setParallelAcceleration(
     BaseCouplingScheme *scheme,
-    const std::string & participant) const
+    const std::string  &participant) const
 {
   if (_accelerationConfig->getAcceleration().get() != nullptr) {
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {

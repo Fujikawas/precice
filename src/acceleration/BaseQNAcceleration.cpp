@@ -174,7 +174,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         // insert column deltaR = _primaryResiduals - _oldPrimaryResiduals at pos. 0 (front) into the
         // QR decomposition and update decomposition
 
-        //apply scaling here
+        // apply scaling here
         _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
@@ -235,7 +235,7 @@ void BaseQNAcceleration::performAcceleration(
   }
 
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
-  /// timeGrids are stored using std::opional, thus the .value() to get the actual object
+  /// timeGrids are stored using std::optional, thus the .value() to get the actual object
   concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value(), windowStart);
   concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value(), windowStart);
 
@@ -290,7 +290,7 @@ void BaseQNAcceleration::performAcceleration(
   _preconditioner->apply(_matrixV);
 
   if (_preconditioner->requireNewQR()) {
-    if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
+    if (not(_filter == Acceleration::QR2FILTER || _filter == Acceleration::QR3FILTER)) { // for QR2 and QR3 filter, there is no need to do this twice
       _qrV.reset(_matrixV, getLSSystemRows());
     }
     _preconditioner->newQRfulfilled();
@@ -393,7 +393,7 @@ void BaseQNAcceleration::updateCouplingData(
 
   for (int id : _dataIDs) {
 
-    auto & couplingData = *cplData.at(id);
+    auto  &couplingData = *cplData.at(id);
     size_t dataSize     = couplingData.getSize();
 
     Eigen::VectorXd timeGrid = _timeGrids->getTimeGridAfter(id, windowStart);
@@ -406,8 +406,7 @@ void BaseQNAcceleration::updateCouplingData(
       }
       offset += dataSize;
 
-      couplingData.sample().values = temp;
-      couplingData.setSampleAtTime(timeGrid(i), couplingData.sample());
+      couplingData.setSampleAtTime(timeGrid(i), time::Sample(couplingData.getDimensions(), temp));
     }
   }
 }
@@ -447,7 +446,7 @@ void BaseQNAcceleration::iterationsConverged(
     _primaryTimeGrids->moveTimeGridToNewWindow(cplData);
   }
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
-  /// timeGrids are stored using std::opional, thus the .value() to get the actual object
+  /// timeGrids are stored using std::optional, thus the .value() to get the actual object
   concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value(), windowStart);
   concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value(), windowStart);
   updateDifferenceMatrices(cplData);
@@ -657,18 +656,9 @@ void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::V
 
 void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplData, double windowStart)
 {
-
-  // If we are not subcycling then we only want to use the last time step in the QN system
-  bool subcycling = false;
-  for (const auto &data : cplData | boost::adaptors::map_values) {
-    if (data->exchangeSubsteps()) {
-      subcycling = true;
-    }
-  }
-
   // Saves the time grid of each waveform in the data field to be used in the QN method
-  _timeGrids.emplace(cplData, _dataIDs, !subcycling);
-  _primaryTimeGrids.emplace(cplData, _primaryDataIDs, !(subcycling and !_reducedTimeGrid));
+  _timeGrids.emplace(cplData, _dataIDs, false);
+  _primaryTimeGrids.emplace(cplData, _primaryDataIDs, _reducedTimeGrid);
 
   // Helper function
   auto addTimeSliceSize = [&](size_t sum, int id, precice::time::TimeGrids timeGrids) { return sum + timeGrids.getTimeGridAfter(id, windowStart).size() * cplData.at(id)->getSize(); };

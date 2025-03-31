@@ -71,6 +71,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivity)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
+    doubleData->moveToNextWindow();
+
     watchIntegral.exportIntegralData(2.0);
   }
   // File Format: Time  DoubleData
@@ -117,6 +119,8 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
+
+    vectorData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -165,6 +169,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivity)
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
+
+    doubleData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -215,6 +221,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityNoScale)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
+    doubleData->moveToNextWindow();
+
     watchIntegral.exportIntegralData(2.0);
   }
   // File Format: Time  DoubleData  SurfaceArea
@@ -263,6 +271,8 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
+
+    vectorData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -314,6 +324,8 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
+
+    vectorData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -373,6 +385,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivity)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
+    doubleData->moveToNextWindow();
+
     watchIntegral.exportIntegralData(2.0);
   }
   // File Format: Time  DoubleData SurfaceArea
@@ -428,6 +442,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityNoScale)
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
+
+    doubleData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -485,6 +501,8 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
+    vectorData->moveToNextWindow();
+
     watchIntegral.exportIntegralData(2.0);
   }
   // File Format: Time  DoubleData0 DoubleData1  SurfaceArea
@@ -541,6 +559,8 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
+    vectorData->moveToNextWindow();
+
     watchIntegral.exportIntegralData(2.0);
   }
   // File Format: Time  DoubleData0 DoubleData1  SurfaceArea
@@ -596,6 +616,8 @@ BOOST_AUTO_TEST_CASE(MeshChangeFaceConnectivity)
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
+
+    doubleData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -668,6 +690,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
+
+    doubleData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -742,6 +766,8 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
+
+    vectorData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -831,6 +857,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
+    doubleData->moveToNextWindow();
+
     watchIntegral.exportIntegralData(2.0);
   }
   // File Format: Time  DoubleData  SurfaceArea
@@ -919,6 +947,8 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
+    vectorData->moveToNextWindow();
+
     watchIntegral.exportIntegralData(2.0);
   }
   // File Format: Time  DoubleData0 DoubleData1  SurfaceArea
@@ -949,9 +979,9 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
     mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
-    mesh::Edge &  e1 = mesh->createEdge(v1, v2);
-    mesh::Edge &  e2 = mesh->createEdge(v2, v3);
-    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh::Edge   &e1 = mesh->createEdge(v1, v2);
+    mesh::Edge   &e2 = mesh->createEdge(v2, v3);
+    mesh::Edge   &e5 = mesh->createEdge(v1, v3);
     mesh->createTriangle(e1, e2, e5);
   }
   if (context.isRank(1)) {
@@ -962,9 +992,9 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
     mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector3d(0.0, 4.0, 0.0));
-    mesh::Edge &  e3 = mesh->createEdge(v3, v4);
-    mesh::Edge &  e4 = mesh->createEdge(v4, v1);
-    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh::Edge   &e3 = mesh->createEdge(v3, v4);
+    mesh::Edge   &e4 = mesh->createEdge(v4, v1);
+    mesh::Edge   &e5 = mesh->createEdge(v1, v3);
     mesh->createTriangle(e3, e4, e5);
   }
 
@@ -1009,6 +1039,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
+    doubleData->moveToNextWindow();
+
     watchIntegral.exportIntegralData(2.0);
   }
   // File Format: Time  DoubleData SurfaceArea
@@ -1039,9 +1071,9 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
     mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
-    mesh::Edge &  e1 = mesh->createEdge(v1, v2);
-    mesh::Edge &  e2 = mesh->createEdge(v2, v3);
-    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh::Edge   &e1 = mesh->createEdge(v1, v2);
+    mesh::Edge   &e2 = mesh->createEdge(v2, v3);
+    mesh::Edge   &e5 = mesh->createEdge(v1, v3);
     mesh->createTriangle(e1, e2, e5);
   }
   if (context.isRank(1)) {
@@ -1052,9 +1084,9 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
     mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector3d(0.0, 4.0, 0.0));
-    mesh::Edge &  e3 = mesh->createEdge(v3, v4);
-    mesh::Edge &  e4 = mesh->createEdge(v4, v1);
-    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh::Edge   &e3 = mesh->createEdge(v3, v4);
+    mesh::Edge   &e4 = mesh->createEdge(v4, v1);
+    mesh::Edge   &e5 = mesh->createEdge(v1, v3);
     mesh->createTriangle(e3, e4, e5);
   }
 
@@ -1098,6 +1130,8 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
+
+    doubleData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }

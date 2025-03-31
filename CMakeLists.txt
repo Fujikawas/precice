@@ -154,7 +154,7 @@ add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
   "Build the \"precice-tools\" executable
 
    preCICE offers in addition to the core library a variety of tools in order to check configuration
-   files or generate xml references. The tools are copmiled into an executable called \"precice-tools\".
+   files or generate xml references. The tools are compiled into an executable called \"precice-tools\".
 
    This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
   ")
@@ -441,6 +441,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_CUDA)
     # Required to make nvcc happy
     target_compile_definitions(preciceCore PRIVATE BOOST_PP_VARIADICS=1)
+    target_compile_definitions(preciceCore PRIVATE BOOST_ASIO_USE_TS_EXECUTOR_AS_DEFAULT=1)
     target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
     target_link_libraries(preciceCore PRIVATE cusolver cublas)
     message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
@@ -581,6 +582,7 @@ IF (BUILD_TESTING)
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
+    ENABLE_EXPORTS Yes
     )
   target_include_directories(testprecice PRIVATE
     ${preCICE_SOURCE_DIR}/src
