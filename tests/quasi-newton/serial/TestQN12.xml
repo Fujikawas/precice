@@ -53,12 +53,12 @@
         lower-bound="-1"
         upper-bound="1"
         range-type="two-ends-bounded" />
-      <filter type="QR2" limit="1e-3" />
-      <bounding type="cropping" />
+      <filter type="QR2" limit="1e-9" />
       <initial-relaxation value="0.2" />
+      <bounding type="SSLFB" />
       <max-used-iterations value="2" />
       <preconditioner type="residual-sum" />
-      <time-windows-reused value="1" />
+      <time-windows-reused value="2" />
     </acceleration:IQN-ILS>
   </coupling-scheme:serial-implicit>
 </precice-configuration>

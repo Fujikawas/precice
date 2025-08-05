@@ -208,15 +208,15 @@ void runTestQNBoundedValueSingleValue(std::string const &config, TestContext con
   std::string meshName, writeDataName1, readDataName1;
 
   if (context.isNamed("SolverOne")) {
-    meshName      = "MeshOne";
+    meshName       = "MeshOne";
     writeDataName1 = "Data11";
     readDataName1  = "Data21";
     std::cout << "SolverOne" << std::endl;
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    meshName      = "MeshTwo";
+    meshName       = "MeshTwo";
     writeDataName1 = "Data21";
-    readDataName1 = "Data11";
+    readDataName1  = "Data11";
   }
 
   precice::Participant interface(context.name, config, context.rank, context.size);
@@ -254,16 +254,15 @@ void runTestQNBoundedValueSingleValue(std::string const &config, TestContext con
       if (iterations == 0) {
         inValues1[0] = -0.2;
       }
-      
-        outValues1[0] = inValues1[0]; // only pushes solution through
-      
+
+      outValues1[0] = inValues1[0]; // only pushes solution through
+
     } else {
       int problem = 1;
-      std::cout << "invalues1 in Solver2: " << inValues1[0] << std::endl;      
-      switch (problem)
-      {
+      std::cout << "invalues1 in Solver2: " << inValues1[0] << std::endl;
+      switch (problem) {
       case 1:
-        outValues1[0] = sin(inValues1[0]/ 0.50-0.5); // I
+        outValues1[0] = sin(inValues1[0] / 0.50 - 0.5); // I
         break;
       case 2:
         break;
@@ -288,29 +287,30 @@ void runTestQNBoundedValueSingleValue(std::string const &config, TestContext con
   interface.finalize();
 }
 
-
 void runTestQNBoundedValueSimple(std::string const &config, TestContext const &context)
 {
   std::string meshName, writeDataName1, readDataName1;
 
   if (context.isNamed("SolverOne")) {
-    meshName      = "MeshOne";
+    meshName       = "MeshOne";
     writeDataName1 = "Data11";
     readDataName1  = "Data21";
     std::cout << "SolverOne" << std::endl;
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    meshName      = "MeshTwo";
+    meshName       = "MeshTwo";
     writeDataName1 = "Data21";
-    readDataName1 = "Data11";
+    readDataName1  = "Data11";
   }
 
   precice::Participant interface(context.name, config, context.rank, context.size);
 
-  VertexID vertexIDs[2];
+  // VertexID vertexIDs[2];
+  VertexID vertexIDs[3];
 
   // meshes for rank 0 and rank 1, we use matching meshes for both participants
-  double positions0[4] = {1.0, 0.0, 1.0, 1.2};
+  // double positions0[4] = {1.0, 0.0, 1.0, 1.2};
+  double positions0[6] = {1.0, 0.0, 1.0, 1.2, 1.0, 1.4};
 
   if (context.isNamed("SolverOne")) {
     if (context.isPrimary()) {
@@ -324,8 +324,10 @@ void runTestQNBoundedValueSimple(std::string const &config, TestContext const &c
   }
 
   interface.initialize();
-  double inValues1[2]  = {0.1, 0.2};
-  double outValues1[2] = {0.00, 0.00};
+  // double inValues1[2]  = {0.1, 0.2};
+  double inValues1[3] = {0.1, 0.2, 0.3};
+  // double outValues1[2] = {0.00, 0.00};
+  double outValues1[3] = {0.00, 0.00, 0.00};
 
   int iterations = 0;
 
@@ -340,40 +342,41 @@ void runTestQNBoundedValueSimple(std::string const &config, TestContext const &c
       if (iterations == 0) {
         inValues1[0] = -0.2;
         inValues1[1] = 0.2;
+        inValues1[2] = -0.9;
       }
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 3; i++) {
         outValues1[i] = inValues1[i]; // only pushes solution through
       }
     } else {
-      int problem = 2;
+      int problem = 3;
       std::cout << "invalues1 in Solver2: " << inValues1[0] << "," << inValues1[1] << std::endl;
-      switch (problem)
-      {
+      switch (problem) {
       case 1:
-        outValues1[0] = sin(inValues1[0] * inValues1[1] / 0.10); // I
-        outValues1[1] = cos(inValues1[0] * inValues1[1] / 0.250);
+        outValues1[0] = sin(0.6 * inValues1[0] * inValues1[1] - 0.4 * inValues1[1] * inValues1[1] + 2); // III
+        outValues1[1] = sin(inValues1[0] * inValues1[1] * inValues1[1] / 0.25 + 0.4 * inValues1[0] * inValues1[1] + 0.1);
         break;
       case 2:
-        outValues1[0] = sin(inValues1[0] * inValues1[1] / 0.5+0.12); // II
+        outValues1[0] = sin(inValues1[0] * inValues1[1] / 0.5 + 0.12); // II
         outValues1[1] = sin(inValues1[0] * inValues1[1] * inValues1[1] / 0.25 + 0.4);
         break;
       case 3:
-        outValues1[0] = sin(0.6 * inValues1[0] * inValues1[1] - 0.4 *inValues1[1] * inValues1[1] + 2); // III
-        outValues1[1] = sin(inValues1[0] * inValues1[1] * inValues1[1] / 0.25 +0.4 * inValues1[0] * inValues1[1]  + 0.1);
+        outValues1[0] = sin(6. * inValues1[0] * inValues1[1] + inValues1[0] - 0.1); // IV
+        outValues1[1] = sin(inValues1[0] * inValues1[0] - inValues1[0]);
         break;
       case 4:
-        outValues1[0] = sin(6. * inValues1[0] * inValues1[1]+ 0.12); // IV
-        outValues1[1] = sin(inValues1[0] * inValues1[1] * inValues1[1] / 0.25 +0.15);
+        outValues1[0] = sin(6. * inValues1[0] * inValues1[1] + 0.12); // IV
+        outValues1[1] = sin(inValues1[0] * inValues1[1] * inValues1[1] / 0.25 + 0.15);
         break;
       case 5:
-        outValues1[0] = sin(0.6 * inValues1[0] * inValues1[1] - 0.4 *inValues1[1] * inValues1[1] + 2); // V
-        outValues1[1] = sin(2*inValues1[0] * inValues1[1] * inValues1[1] +0.4);
+        outValues1[0] = sin(inValues1[0] * inValues1[1] + 1); // V
+        outValues1[1] = cos(inValues1[1] * inValues1[2]);
+        outValues1[2] = cos(inValues1[0] * inValues1[2]);
         break;
-
       default:
         break;
       }
-      std::cout << "outvalues1 in Solver2: " << outValues1[0] << "," << outValues1[1] << std::endl;
+      // std::cout << "outvalues1 in Solver2: " << outValues1[0] << "," << outValues1[1] << std::endl;
+      std::cout << "outvalues1 in Solver2: " << outValues1[0] << "," << outValues1[1] << "," << outValues1[2] << std::endl;
     }
 
     interface.writeData(meshName, writeDataName1, vertexIDs, outValues1);
@@ -393,7 +396,7 @@ void runTestQNBoundedValueComplex(std::string const &config, TestContext const &
   std::string meshName, writeDataName1, writeDataName2, writeDataName3, readDataName1, readDataName2, readDataName3;
 
   if (context.isNamed("SolverOne")) {
-    meshName      = "MeshOne";
+    meshName       = "MeshOne";
     writeDataName1 = "Data11";
     writeDataName2 = "Data12";
     writeDataName3 = "Data13";
@@ -403,13 +406,13 @@ void runTestQNBoundedValueComplex(std::string const &config, TestContext const &
     std::cout << "SolverOne" << std::endl;
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    meshName      = "MeshTwo";
+    meshName       = "MeshTwo";
     writeDataName1 = "Data21";
     writeDataName2 = "Data22";
     writeDataName3 = "Data23";
-    readDataName1 = "Data11";
-    readDataName2 = "Data12";
-    readDataName3 = "Data13";
+    readDataName1  = "Data11";
+    readDataName2  = "Data12";
+    readDataName3  = "Data13";
   }
 
   precice::Participant interface(context.name, config, context.rank, context.size);
@@ -477,20 +480,20 @@ void runTestQNBoundedValueComplex(std::string const &config, TestContext const &
         outValues2[i] = inValues2[i]; // only pushes solution through
         outValues3[i] = inValues3[i]; // only pushes solution through
       }
-     } else {
-      outValues1[0] = sin(inValues1[0] * inValues1[1] / 0.5+0.12); // II
+    } else {
+      outValues1[0] = sin(inValues1[0] * inValues1[1] / 0.5 + 0.12); // II
       outValues1[1] = sin(inValues1[0] * inValues1[1] * inValues1[1] / 0.25 + 0.4);
-      outValues1[2] = sin(0.6 * inValues1[2] * inValues1[3] - 0.4 *inValues1[3] * inValues1[3] + 2); // III
-      outValues1[3] = sin(inValues1[2] * inValues1[3] * inValues1[3] / 0.25 +0.4 * inValues1[2] * inValues1[3]  + 0.1);
-      outValues1[4] = sin(6. * inValues1[4] * inValues1[5]+ 0.12); // IV
-      outValues1[5] = sin(inValues1[4] * inValues1[5] * inValues1[5] / 0.25 +0.15);
+      outValues1[2] = sin(0.6 * inValues1[2] * inValues1[3] - 0.4 * inValues1[3] * inValues1[3] + 2); // III
+      outValues1[3] = sin(inValues1[2] * inValues1[3] * inValues1[3] / 0.25 + 0.4 * inValues1[2] * inValues1[3] + 0.1);
+      outValues1[4] = sin(6. * inValues1[4] * inValues1[5] + 0.12); // IV
+      outValues1[5] = sin(inValues1[4] * inValues1[5] * inValues1[5] / 0.25 + 0.15);
 
-      outValues2[0] = sin(inValues2[0] * inValues2[1] / 0.5+0.12); // II
+      outValues2[0] = sin(inValues2[0] * inValues2[1] / 0.5 + 0.12); // II
       outValues2[1] = sin(inValues2[0] * inValues2[1] * inValues2[1] / 0.25 + 0.4);
-      outValues2[2] = sin(0.6 * inValues2[2] * inValues2[3] - 0.4 *inValues2[3] * inValues2[3] + 2); // III
-      outValues2[3] = sin(inValues2[2] * inValues2[3] * inValues2[3] / 0.25 +0.4 * inValues2[2] * inValues2[3]  + 0.1);
-      outValues2[4] = sin(0.6 * inValues2[4] * inValues2[5] - 0.4 *inValues2[5] * inValues2[5] + 2); // III
-      outValues2[5] = sin(inValues2[4] * inValues2[5] * inValues2[5] / 0.25 +0.4 * inValues2[4] * inValues2[5]  + 0.1);
+      outValues2[2] = sin(0.6 * inValues2[2] * inValues2[3] - 0.4 * inValues2[3] * inValues2[3] + 2); // III
+      outValues2[3] = sin(inValues2[2] * inValues2[3] * inValues2[3] / 0.25 + 0.4 * inValues2[2] * inValues2[3] + 0.1);
+      outValues2[4] = sin(0.6 * inValues2[4] * inValues2[5] - 0.4 * inValues2[5] * inValues2[5] + 2); // III
+      outValues2[5] = sin(inValues2[4] * inValues2[5] * inValues2[5] / 0.25 + 0.4 * inValues2[4] * inValues2[5] + 0.1);
       // a fixed-problem without bounded data
       outValues3[0] = 1.0 / 3 * sin(inValues3[1]) + 1.0 / 4 * cos(inValues3[2]) + 1.0 / 5 * pow(inValues3[3], 2) + 1.0 / 6;
       outValues3[1] = 1.0 / 4 * cos(inValues3[0]) + 1.0 / 5 * sin(inValues3[4]) + 1.0 / 6 * sqrt(inValues3[5] + 2);
@@ -499,9 +502,9 @@ void runTestQNBoundedValueComplex(std::string const &config, TestContext const &
       outValues3[4] = 1.0 / 7 * sin(inValues3[4]) + 1.0 / 8 * cos(inValues3[1]) + 1.0 / 9 * exp(inValues3[2] - 1);
       outValues3[5] = 1.0 / 8 * cos(inValues3[5]) + 1.0 / 9 * sin(inValues3[0]) + 1.0 / 10 * log(inValues3[3] * inValues3[3] + 2);
 
-      std::cout << "outvalues1 in Solver2: " << outValues1[0] << "," << outValues1[1]<<"," << outValues1[2]<<","<<outValues1[3]<<","<<outValues1[4]<<","<<outValues1[5] << std::endl;
-      std::cout << "outvalues2 in Solver2: " << outValues2[0] << "," << outValues2[1]<<"," << outValues2[2]<<","<<outValues2[3]<<","<<outValues2[4]<<","<<outValues2[5] << std::endl;
-      std::cout << "outvalues3 in Solver2: " << outValues3[0] << "," << outValues3[1]<<"," << outValues3[2]<<","<<outValues3[3]<<","<<outValues3[4]<<","<<outValues3[5] << std::endl;
+      std::cout << "outvalues1 in Solver2: " << outValues1[0] << "," << outValues1[1] << "," << outValues1[2] << "," << outValues1[3] << "," << outValues1[4] << "," << outValues1[5] << std::endl;
+      std::cout << "outvalues2 in Solver2: " << outValues2[0] << "," << outValues2[1] << "," << outValues2[2] << "," << outValues2[3] << "," << outValues2[4] << "," << outValues2[5] << std::endl;
+      std::cout << "outvalues3 in Solver2: " << outValues3[0] << "," << outValues3[1] << "," << outValues3[2] << "," << outValues3[3] << "," << outValues3[4] << "," << outValues3[5] << std::endl;
     }
 
     interface.writeData(meshName, writeDataName1, vertexIDs, outValues1);

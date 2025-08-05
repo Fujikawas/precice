@@ -74,10 +74,9 @@ private:
   const std::string VALUE_AITKEN;
   const std::string VALUE_IQNILS;
   const std::string VALUE_IQNIMVJ;
-  const std::string VALUE_CROPPING;
-  const std::string VALUE_TRANSFORMATION;
   const std::string VALUE_FALLBACK;
   const std::string VALUE_CUTSTEP;
+  const std::string VALUE_CUTSTEPFB;
   const std::string VALUE_QR1FILTER;
   const std::string VALUE_QR1_ABSFILTER;
   const std::string VALUE_QR2FILTER;
@@ -142,7 +141,7 @@ private:
     double      singularityLimit           = 1e-2;
     std::string preconditionerType         = "residual-sum";
     int         precond_nbNonConstTWindows = -1;
-    std::string boundingType               = "cropping";
+    std::string boundingType               = "FB";
   } _defaultValuesIQNILS;
 
   const struct DefaultValuesIMVJ {
@@ -153,7 +152,7 @@ private:
     double      singularityLimit           = 1e-2;
     std::string preconditionerType         = "residual-sum";
     int         precond_nbNonConstTWindows = -1;
-    std::string boundingType               = "cropping";
+    std::string boundingType               = "FB";
   } _defaultValuesIQNIMVJ;
 
   struct UserDefinitions {

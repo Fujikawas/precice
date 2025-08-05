@@ -108,11 +108,7 @@ public:
    * Has to be called after every implicit coupling iteration.
    */
   virtual void performAcceleration(DataMap &cplData);
-  /**
-   * @brief Transform the bounded input data into the inf range.
-   */
-  virtual void forwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds,
-                                     std::map<int, double> upperBounds);
+
   /**
    * @brief Transform the output data backward from inf to certain range.
    */
@@ -174,6 +170,9 @@ protected:
 
   /// Maximum number of old time windows (with data values) kept.
   int _timeWindowsReused;
+
+  /// Overshooting count
+  int _nbOvershooting = 0;
 
   /// Data IDs of data to be involved in the IQN algorithm.
   std::vector<int> _dataIDs;

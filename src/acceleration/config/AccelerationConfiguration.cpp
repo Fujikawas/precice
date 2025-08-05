@@ -60,10 +60,9 @@ AccelerationConfiguration::AccelerationConfiguration(
       VALUE_AITKEN("aitken"),
       VALUE_IQNILS("IQN-ILS"),
       VALUE_IQNIMVJ("IQN-IMVJ"),
-      VALUE_CROPPING("cropping"),
-      VALUE_TRANSFORMATION("transformation"),
-      VALUE_FALLBACK("fall-back"),
-      VALUE_CUTSTEP("cutStep"),
+      VALUE_FALLBACK("FB"),
+      VALUE_CUTSTEP("SSL"),
+      VALUE_CUTSTEPFB("SSLFB"),
       VALUE_QR1FILTER("QR1"),
       VALUE_QR1_ABSFILTER("QR1-absolute"),
       VALUE_QR2FILTER("QR2"),
@@ -500,17 +499,14 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     addCommonIQNSubtags(tag);
 
     XMLTag tagBoundingType(*this, TAG_BOUNDING_TYPE, XMLTag::OCCUR_NOT_OR_ONCE);
-    tagBoundingType.setDocumentation(" Method used to bound the data. Possible types:\n"
-                                     " - `transformation`: the value could range in \\(-\\infty, \\infty)\\ \n"
-                                     " - `cropping`: the value is bounded at the left end\n"
-                                     " - `Aitken`: the value is bounded at the right send\n"
-                                     " - `cutStep`: the value has a range that is bounded at both the left and right ends.\n"
-                                     "If this tag is not provided, cropping is used.");
+    tagBoundingType.setDocumentation(" Method used to bound the output from Quasi-Newton step when it goes beyond the given bounds. Possible types:\n"
+                                     " - `FB`: discard the Quasi-Newton step. \n"
+                                     " - `SSL`: shorten the Quasi-Newton step to the bounds. \n"
+                                     " - `SSLFB`: switsch between discarding and shortening the Quasi-Newton step. \n");
     XMLAttribute<std::string> attrBoundingType(ATTR_TYPE);
-    attrBoundingType.setOptions({VALUE_CROPPING,
-                                 VALUE_TRANSFORMATION,
-                                 VALUE_FALLBACK,
-                                 VALUE_CUTSTEP});
+    attrBoundingType.setOptions({VALUE_FALLBACK,
+                                 VALUE_CUTSTEP,
+                                 VALUE_CUTSTEPFB});
     tagBoundingType.addAttribute(attrBoundingType);
     tag.addSubtag(tagBoundingType);
 
@@ -588,17 +584,14 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     addCommonIQNSubtags(tag);
 
     XMLTag tagBoundingType(*this, TAG_BOUNDING_TYPE, XMLTag::OCCUR_NOT_OR_ONCE);
-    tagBoundingType.setDocumentation(" Method used to bound the data. Possible types:\n"
-                                     " - `transformation`: the value could range in \\(-\\infty, \\infty)\\ \n"
-                                     " - `cropping`: the value is bounded at the left end\n"
-                                     " - `Aitken`: the value is bounded at the right send\n"
-                                     " - `cutStep`: the value has a range that is bounded at both the left and right ends.\n"
-                                     "If this tag is not provided, cropping is used.");
+    tagBoundingType.setDocumentation(" Method used to bound the output from Quasi-Newton step when it goes beyond the given bounds. Possible types:\n"
+                                     " - `FB`: discard the Quasi-Newton step. \n"
+                                     " - `SSL`: shorten the Quasi-Newton step to the bounds. \n"
+                                     " - `SSLFB`: switsch between discarding and shortening the Quasi-Newton step. \n");
     XMLAttribute<std::string> attrBoundingType(ATTR_TYPE);
-    attrBoundingType.setOptions({VALUE_CROPPING,
-                                 VALUE_TRANSFORMATION,
-                                 VALUE_FALLBACK,
-                                 VALUE_CUTSTEP});
+    attrBoundingType.setOptions({VALUE_FALLBACK,
+                                 VALUE_CUTSTEP,
+                                 VALUE_CUTSTEPFB});
     tagBoundingType.addAttribute(attrBoundingType);
     tag.addSubtag(tagBoundingType);
 

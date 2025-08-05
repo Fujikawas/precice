@@ -85,9 +85,7 @@
         lower-bound="-5.0"
         upper-bound="5.0"
         range-type="not-bounded" />
-      <data
-        name="Data23"
-        mesh="MeshOne"/>
+      <data name="Data23" mesh="MeshOne" />
       <filter type="QR2" limit="1e-3" />
       <bounding type="fall-back" />
       <initial-relaxation value="0.2" />
