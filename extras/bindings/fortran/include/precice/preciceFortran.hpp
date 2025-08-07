@@ -351,7 +351,7 @@ PRECICE_API void precicef_set_triangle_(
  * @copydoc precice::Participant::setMeshTriangles()
  *
  */
-PRECICE_API void precicef_set_mesh_edges_(
+PRECICE_API void precicef_set_mesh_triangles_(
     const char *meshName,
     const int  *size,
     const int  *ids,
@@ -608,7 +608,7 @@ PRECICE_API void precicef_set_mesh_access_region_(
  */
 PRECICE_API void precicef_get_mesh_vertex_ids_and_coordinates_(
     const char *meshName,
-    const int   size,
+    const int  *size,
     int        *ids,
     double     *coordinates,
     int         meshNameLength);
